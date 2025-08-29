@@ -1,0 +1,276 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "FeedbackFlow API",
+    "description": "API for collecting and managing user feedback and reviews with AI-powered insights",
+    "version": "1.0.0",
+    "contact": {
+      "name": "FeedbackFlow Support",
+      "url": "https://feedbackflow.org",
+      "email": "support@feedbackflow.org"
+    }
+  },
+  "servers": [
+    {
+      "url": "/api",
+      "description": "API server"
+    }
+  ],
+  "security": [
+    {
+      "ApiKeyAuth": []
+    }
+  ],
+  "paths": {
+    "/{organization}/ingest": {
+      "post": {
+        "summary": "Ingest reviews",
+        "description": "Import multiple reviews for an organization. This endpoint allows you to bulk upload customer feedback and reviews that will be processed and analyzed by FeedbackFlow's AI system.\n\n**Rate Limiting:** This endpoint is rate limited to 1000 requests per minute per IP address.\n\n**Authentication:** Requires a valid API key in the Authorization header.",
+        "tags": ["Reviews"],
+        "security": [
+          {
+            "ApiKeyAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "organization",
+            "in": "path",
+            "required": true,
+            "description": "Organization identifier",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/ReviewInput"
+                },
+                "minItems": 1,
+                "maxItems": 100,
+                "description": "Array of reviews to ingest (1-100 reviews per request)"
+              },
+              "examples": {
+                "single_review": {
+                  "summary": "Single review example",
+                  "value": [
+                    {
+                      "content": "Great product! Very satisfied with the quality and customer service.",
+                      "customer": "John Doe",
+                      "rating": 5
+                    }
+                  ]
+                },
+                "multiple_reviews": {
+                  "summary": "Multiple reviews example",
+                  "value": [
+                    {
+                      "content": "Excellent service and fast delivery. Highly recommend!",
+                      "customer": "Alice Smith",
+                      "rating": 5
+                    },
+                    {
+                      "content": "Good product overall, but shipping was a bit slow.",
+                      "customer": "Bob Johnson",
+                      "rating": 4
+                    },
+                    {
+                      "content": "Average experience. The product works as expected.",
+                      "customer": "Carol Wilson",
+                      "rating": 3
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Reviews successfully ingested",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IngestSuccessResponse"
+                },
+                "example": {
+                  "success": true,
+                  "reviews": [
+                    {
+                      "id": "rev_123abc"
+                    },
+                    {
+                      "id": "rev_456def"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input data",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "error": "Invalid input",
+                  "details": {
+                    "_errors": [],
+                    "0": {
+                      "content": {
+                        "_errors": ["String must contain at least 1 character(s)"]
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - Invalid or missing API key",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "error": "Unauthorized",
+                  "details": "Invalid API key"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limit exceeded - Too many requests within the time window",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "error": "Too Many Requests",
+                  "details": "Rate limit of 1000 requests per minute exceeded. Please try again later."
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "error": "Failed to ingest review",
+                  "details": "Database connection failed"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "ReviewInput": {
+        "type": "object",
+        "required": ["content", "customer", "rating"],
+        "properties": {
+          "content": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 4096,
+            "description": "The review content or feedback text",
+            "example": "Great product! Very satisfied with the quality and customer service."
+          },
+          "customer": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 256,
+            "description": "Customer name or identifier",
+            "example": "John Doe"
+          },
+          "rating": {
+            "type": "number",
+            "minimum": 1,
+            "maximum": 5,
+            "description": "Rating score from 1 to 5",
+            "example": 5
+          }
+        }
+      },
+      "IngestSuccessResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "example": true,
+            "description": "Indicates successful ingestion"
+          },
+          "reviews": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ReviewReference"
+            },
+            "description": "Array of ingested review references"
+          }
+        }
+      },
+      "ReviewReference": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Unique identifier for the ingested review",
+            "example": "rev_123abc456def"
+          }
+        }
+      },
+      "ErrorResponse": {
+        "type": "object",
+        "properties": {
+          "error": {
+            "type": "string",
+            "description": "Error message",
+            "example": "Invalid input"
+          },
+          "details": {
+            "oneOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "object"
+              }
+            ],
+            "description": "Additional error details"
+          }
+        }
+      }
+    },
+    "securitySchemes": {
+      "ApiKeyAuth": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "Authorization",
+        "description": "API key for authentication. Use format: `Bearer your_api_key`. You can generate API keys from your organization dashboard."
+      }
+    }
+  },
+  "tags": [
+    {
+      "name": "Reviews",
+      "description": "Operations for managing customer reviews and feedback"
+    }
+  ]
+}
