@@ -7,7 +7,7 @@
     "contact": {
       "name": "FeedbackFlow Support",
       "url": "https://feedbackflow.org",
-      "email": "support@feedbackflow.org"
+      "email": "oscar@feedbackflow.org"
     }
   },
   "servers": [
@@ -26,7 +26,9 @@
       "post": {
         "summary": "Ingest reviews",
         "description": "Import multiple reviews for an organization. This endpoint allows you to bulk upload customer feedback and reviews that will be processed and analyzed by FeedbackFlow's AI system.\n\n**Rate Limiting:** This endpoint is rate limited to 1000 requests per minute per IP address.\n\n**Authentication:** Requires a valid API key in the Authorization header.",
-        "tags": ["Reviews"],
+        "tags": [
+          "Reviews"
+        ],
         "security": [
           {
             "ApiKeyAuth": []
@@ -123,12 +125,14 @@
                 "example": {
                   "error": "Invalid input",
                   "details": {
-                    "_errors": [],
                     "0": {
                       "content": {
-                        "_errors": ["String must contain at least 1 character(s)"]
+                        "_errors": [
+                          "String must contain at least 1 character(s)"
+                        ]
                       }
-                    }
+                    },
+                    "_errors": []
                   }
                 }
               }
@@ -184,7 +188,11 @@
     "schemas": {
       "ReviewInput": {
         "type": "object",
-        "required": ["content", "customer", "rating"],
+        "required": [
+          "content",
+          "customer",
+          "rating"
+        ],
         "properties": {
           "content": {
             "type": "string",
@@ -262,8 +270,8 @@
       "ApiKeyAuth": {
         "type": "apiKey",
         "in": "header",
-        "name": "Authorization",
-        "description": "API key for authentication. Use format: `Bearer your_api_key`. You can generate API keys from your organization dashboard."
+        "name": "x-api-key",
+        "description": "API key for authentication. Use format: `Bearer your_api_key`. You can generate API keys from your organization /keys page."
       }
     }
   },
